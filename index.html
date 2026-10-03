@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dentro de Mí</title>
+  <meta name="description" content="Juego de decisiones reales. Tú eliges, tu cuerpo responde, y te contamos lo que de verdad pasa.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="#/" aria-label="Dentro de Mí, inicio"><span class="brand-mark"><i class="ph-bold ph-person-simple"></i></span><span class="brand-name">Dentro de Mí</span></a>
+    <nav class="top-nav" aria-label="Principal">
+      <a href="#/casos" data-nav="casos"><i class="ph-bold ph-game-controller"></i><span>Casos</span></a>
+      <a href="#/guia" data-nav="guia"><i class="ph-bold ph-book-open-text"></i><span>Lo que de verdad pasa</span></a>
+      <button id="sound-toggle" type="button" aria-pressed="false" aria-label="Sonido"><i class="ph-bold ph-speaker-high"></i><span>Sonido: no</span></button>
+      <button id="motion-toggle" type="button" aria-pressed="false" aria-label="Reducir movimiento"><i class="ph-bold ph-sparkle"></i><span>Menos movimiento</span></button>
+    </nav>
+  </header>
+
+  <main id="app" tabindex="-1"></main>
+  <div id="toasts" aria-live="polite"></div>
+
+  <aside class="help" aria-label="Ayuda siempre visible">
+    <i class="ph-bold ph-lifebuoy"></i>
+    <span>Ayuda: <strong>IAFA 800-IAFA-800</strong></span>
+    <span class="help-sep" aria-hidden="true"></span>
+    <span>Emergencias: <strong>911</strong></span>
+  </aside>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+import { chromium } from "playwright";
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 1280, height: 800 }, colorScheme: "dark" });
+const errs = []; p.on("pageerror", (e) => errs.push(e.message));
+const U = "http://localhost:5173/";
+await p.goto(U + "#/s/combinacion-peligrosa/2", { waitUntil: "networkidle" }); await p.waitForTimeout(900);
+await p.screenshot({ path: "shots/dark-critical.png" });
+const hiddenBefore = await p.$eval("#go-next", (e) => e.hidden);
+await p.click("#unpause");
+const hiddenAfter = await p.$eval("#go-next", (e) => e.hidden);
+console.log("continue hidden before/after unpause:", hiddenBefore, hiddenAfter);
+await p.goto(U + "#/s/fiesta-regreso/2", { waitUntil: "networkidle" }); await p.waitForTimeout(900);
+await p.screenshot({ path: "shots/dark-recovery.png", fullPage: true });
+console.log("errors:", errs.length ? errs : "none"); await b.close();

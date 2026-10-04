@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dentro de Mí</title>
-  <meta name="description" content="Juego de decisiones reales. Tú eliges, tu cuerpo responde, y te contamos lo que de verdad pasa.">
+  <meta name="description" content="Juego de historias para estudiantes: eliges qué hacer, ves qué le pasa a tu cuerpo y lees datos con su fuente.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
@@ -14,11 +14,12 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <div id="doodle" aria-hidden="true"></div>
   <header class="top">
     <a class="brand" href="#/" aria-label="Dentro de Mí, inicio"><span class="brand-mark"><i class="ph-bold ph-person-simple"></i></span><span class="brand-name">Dentro de Mí</span></a>
     <nav class="top-nav" aria-label="Principal">
       <a href="#/casos" data-nav="casos"><i class="ph-bold ph-game-controller"></i><span>Casos</span></a>
-      <a href="#/guia" data-nav="guia"><i class="ph-bold ph-book-open-text"></i><span>Lo que de verdad pasa</span></a>
+      <a href="#/guia" data-nav="guia"><i class="ph-bold ph-book-open-text"></i><span>Guía</span></a>
       <button id="sound-toggle" type="button" aria-pressed="false" aria-label="Sonido"><i class="ph-bold ph-speaker-high"></i><span>Sonido: no</span></button>
       <button id="motion-toggle" type="button" aria-pressed="false" aria-label="Reducir movimiento"><i class="ph-bold ph-sparkle"></i><span>Menos movimiento</span></button>
     </nav>

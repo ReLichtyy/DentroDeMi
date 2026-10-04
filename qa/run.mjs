@@ -2,7 +2,7 @@
 import { chromium } from "playwright";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
-const BASE = process.env.URL || "http://localhost:5173/";
+const BASE = process.env.URL || "http://127.0.0.1:5180/";
 const out = fileURLToPath(new URL("./shots/", import.meta.url));
 fs.mkdirSync(out, { recursive: true });
 const browser = await chromium.launch();
@@ -42,7 +42,7 @@ for (const [id, list] of Object.entries(paths)) {
     total++;
     if (p.bad) { console.log("DATA ERROR", id, p.bad); continue; }
     await page.goto(BASE + "#/casos"); await page.waitForSelector(".grid");
-    await page.goto(BASE + "#/jugar/" + id); await page.waitForSelector(".stage"); await page.waitForTimeout(60);
+    await page.goto(BASE + "#/jugar/" + id); await page.waitForSelector("#scene"); await page.waitForTimeout(60);
     let safe = 0, k = 0;
     while (safe++ < 40) {
       if (await page.$(".end")) break;
@@ -70,7 +70,7 @@ await page.goto(BASE + "#/guia/alcohol"); await shot("guia");
 await page.setViewportSize({ width: 390, height: 800 });
 for (const [n, h] of [["m-home", "#/"], ["m-casos", "#/casos"], ["m-play", "#/jugar/sofi/n3"], ["m-guia", "#/guia/mezclas"]]) {
   await page.goto(BASE + h); await page.waitForTimeout(250); await shot(n);
-  const off = await page.evaluate(() => [...document.querySelectorAll("body *")].filter((e) => e.getBoundingClientRect().right > innerWidth + 1 && getComputedStyle(e).position !== "fixed").slice(0, 4).map((e) => e.tagName + "." + e.className));
+  const off = await page.evaluate(() => [...document.querySelectorAll("body *")].filter((e) => e.getBoundingClientRect().right > innerWidth + 1 && getComputedStyle(e).position !== "fixed" && !e.closest("#doodle")).slice(0, 4).map((e) => e.tagName + "." + e.className));
   console.log("overflow", n, off.length ? off : "ok");
 }
 // rewind

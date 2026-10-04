@@ -1,0 +1,13 @@
+import { chromium } from "playwright";
+const b = await chromium.launch();
+const ctx = await b.newContext({ viewport: { width: 1280, height: 800 } });
+const p = await ctx.newPage();
+await p.goto("http://127.0.0.1:5180/#/"); await p.waitForTimeout(500);
+await p.evaluate(() => window.scrollTo(0, 1500)); await p.waitForTimeout(900);
+const r = await p.$eval("#fab", (e) => { const q = e.getBoundingClientRect(); return { cx: Math.round(q.left + q.width / 2), w: Math.round(q.width), h: Math.round(q.height), bottom: Math.round(innerHeight - q.bottom) }; });
+console.log("centro x:", r.cx, "(pantalla 1280 -> 640)", "tamaño:", r.w + "x" + r.h, "separación del borde inferior:", r.bottom);
+await p.screenshot({ path: "shots/fab-center.png" });
+await p.evaluate(() => window.scrollTo(0, document.body.scrollHeight)); await p.waitForTimeout(500);
+console.log("visible abajo del todo:", await p.$eval("#fab", (e) => !e.hidden));
+await p.screenshot({ path: "shots/fab-bottom.png" });
+await b.close();

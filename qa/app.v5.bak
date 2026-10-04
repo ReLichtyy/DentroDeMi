@@ -170,9 +170,9 @@
   function home() {
     return `<section class="home">
       <div>
-        <span class="kicker"><i class="ph-bold ph-game-controller"></i>Juego para estudiantes</span>
+        <span class="kicker"><i class="ph-bold ph-game-controller"></i>Juego de decisiones reales</span>
         <h1>Dentro<br>de <em>Mí</em></h1>
-        <p class="lead">Eliges qué hacer en situaciones de la vida universitaria y ves qué le pasa a tu cuerpo. Con datos claros y su fuente.</p>
+        <p class="lead">Una noche. Una decisión. Tu cuerpo responde. Sin sermones: aquí se cuenta lo que de verdad pasa.</p>
         <form class="start-form" id="start">
           <div class="field"><label for="nm">¿Cómo te llamas?</label><input id="nm" name="nm" maxlength="14" autocomplete="off" placeholder="Tu nombre o apodo" value="${esc(S.name)}"></div>
           <div class="field"><span class="lbl" id="avl">Elige tu personaje</span>
@@ -189,9 +189,9 @@
     </section>
     <h2 class="sec-h">Cómo se juega</h2>
     <section class="steps">
-      <div class="card step"><i class="ph-bold ph-signpost"></i><h3>Elige una opción</h3><p>Lees una escena y decides. Cada opción lleva a un final distinto.</p></div>
-      <div class="card step"><i class="ph-bold ph-hand-pointing"></i><h3>Revisa lo que te rodea</h3><p>Los objetos y las barras del cuerpo se pueden tocar para ver qué significan.</p></div>
-      <div class="card step"><i class="ph-bold ph-flask"></i><h3>Lee el dato</h3><p>Cada dato dice qué pasa, qué efecto tiene y de dónde sale.</p></div>
+      <div class="card step"><i class="ph-bold ph-signpost"></i><h3>Elige qué haces</h3><p>Cada caso es una historia corta. Tus decisiones cambian cómo termina.</p></div>
+      <div class="card step"><i class="ph-bold ph-hand-pointing"></i><h3>Toca todo</h3><p>Objetos, barras del cuerpo y fuentes: cada uno te da su contexto y su efecto.</p></div>
+      <div class="card step"><i class="ph-bold ph-flask"></i><h3>Entérate de lo real</h3><p>Datos directos, con fuente, sin rodeos ni miedo barato.</p></div>
     </section>
     ${aboutHTML()}`;
   }
@@ -201,79 +201,65 @@
   function aboutHTML() {
     const ends = CASES.reduce((a, c) => a + Object.values(c.nodes).filter((n) => n.end).length, 0);
     const cast = ["Andrés", "Sofi", "Mateo", "Vale", "Rafa"].map((n) => avatar(NPCS[n], "happy")).join("");
-    const bag = [["ph-wine", "El vaso"], ["ph-key", "Las llaves"], ["ph-device-mobile", "Tu celular", 1]].map((o) => `<span class="obj ${o[2] ? "new" : ""}"><i class="ph-bold ${o[0]}"></i><span>${o[1]}</span></span>`).join("");
     return `
     <h2 class="sec-h">Qué es Dentro de Mí</h2>
     <section class="bento" aria-label="Qué es la app">
-      <article class="card bc b-yellow span4"><span class="bc-ic"><i class="ph-bold ph-game-controller"></i></span><h3>Historias de la vida universitaria</h3>
-        <p>Cada caso parte de algo que puede pasarte: una fiesta con auto, el examen de mañana, una amiga que no responde. Decides tú, y la historia sigue según lo que elijas.</p>
+      <article class="card bc b-yellow span4"><span class="bc-ic"><i class="ph-bold ph-game-controller"></i></span><h3>Un juego de decisiones reales</h3>
+        <p>Vives historias cortas de la vida universitaria: una fiesta, la noche antes de un examen, un amigo que no responde. Tú decides qué haces, y cada decisión cambia cómo termina.</p>
         <div class="choices-mini" aria-hidden="true"><span><b>1</b>Pedir un taxi para Sofi y para ti</span><span><b>2</b>Subirte: él dice que está bien</span></div>
         <div class="bc-foot"><span class="cast-stack">${cast}</span><span class="bc-count"><b>${CASES.length}</b> casos y <b>${ends}</b> finales</span></div></article>
-      <article class="card bc span2"><span class="bc-ic"><i class="ph-bold ph-heartbeat"></i></span><h3>Barras del cuerpo</h3>
-        <p>Reflejos, memoria, corazón y otras barras suben o bajan con cada decisión.</p>
+      <article class="card bc span2"><span class="bc-ic"><i class="ph-bold ph-heartbeat"></i></span><h3>Tu cuerpo, en vivo</h3>
+        <p>Reflejos, memoria, corazón y más suben o bajan según lo que eliges.</p>
         <div class="bc-demo">${miniTile("reflejos", 4)}${miniTile("foco", 2)}${miniTile("corazon", 1)}</div></article>
-      <article class="card bc b-sky span3"><span class="bc-ic"><i class="ph-bold ph-flask"></i></span><h3>Datos con fuente</h3>
-        <p>Cada dato tiene dos partes. Contexto: la fuente y un resumen. Efecto: qué cambia en ti.</p>
+      <article class="card bc b-sky span3"><span class="bc-ic"><i class="ph-bold ph-flask"></i></span><h3>Datos con referencia</h3>
+        <p>Cada dato real llega en dos partes: el contexto, con su referencia y resumen, y el efecto, qué cambia para ti.</p>
         <div class="bc-demo fact-mini"><div class="fm-row"><b>Contexto</b><span class="fm-ref"><i class="ph-bold ph-file-text"></i>NIAAA</span><span>Resumen breve de lo que dice la fuente.</span></div><div class="fm-row fx"><b>Efecto</b><span>Lo que cambia en ti, en una línea.</span></div></div></article>
-      <article class="card bc span3"><span class="bc-ic"><i class="ph-bold ph-backpack"></i></span><h3>Una mochila que se llena</h3>
-        <p>A medida que avanza la historia aparecen objetos en tu mochila. Tócalos para ver qué significan.</p>
-        <div class="inv-grid bag-demo" aria-hidden="true">${bag}</div></article>
+      <article class="card bc span3"><span class="bc-ic"><i class="ph-bold ph-chat-circle-text"></i></span><h3>Sin sermones, sin miedo barato</h3>
+        <p>No te dice qué está bien o mal. Te muestra qué pasa de verdad y qué decisión te cuida a ti y a los demás.</p>
+        <div class="mood-strip" aria-hidden="true">${[["calm", "Bien"], ["tired", "Cansado"], ["worried", "Mal"], ["scared", "Ayuda"]].map((m) => `<span>${avatar(userSpec(), m[0])}<small>${m[1]}</small></span>`).join("")}</div></article>
     </section>
 
-    <h2 class="sec-h">Por qué importa si estudias</h2>
+    <h2 class="sec-h">Por qué importa, como estudiante</h2>
     <section class="why" aria-label="Por qué importa">
-      <article class="card wc"><span class="bc-ic"><i class="ph-bold ph-clock-countdown"></i></span><h3>Se decide con prisa</h3><p>Casi siempre pasa en una fiesta, antes de un examen o de madrugada, sin tiempo para pensar. Practicar antes te da una idea de qué hacer.</p></article>
-      <article class="card wc w-coral"><span class="bc-ic"><i class="ph-bold ph-brain"></i></span><h3>El cerebro termina de formarse tarde</h3><p>Sigue desarrollándose hasta cerca de los 25 años, y eso afecta la atención y el aprendizaje.</p><span class="chipbtn static"><i class="ph-bold ph-file-text"></i>CDC, NIDA</span></article>
-      <article class="card wc w-teal"><span class="bc-ic"><i class="ph-bold ph-graduation-cap"></i></span><h3>Afecta tus notas</h3><p>Dormir poco, perder concentración o no recordar lo estudiado se nota en el examen.</p></article>
-      <article class="card wc w-yellow"><span class="bc-ic"><i class="ph-bold ph-users-three"></i></span><h3>A veces te toca ayudar</h3><p>Si alguien se ve mal en una reunión, puedes ser tú quien esté ahí. Conviene saber cuándo llamar al 911.</p></article>
+      <article class="card wc"><span class="bc-ic"><i class="ph-bold ph-clock-countdown"></i></span><h3>Se decide rápido y bajo presión</h3><p>Casi nunca eliges con calma: es la fiesta, la víspera del examen o las 2 de la mañana. Practicar antes ayuda a no improvisar.</p></article>
+      <article class="card wc w-coral"><span class="bc-ic"><i class="ph-bold ph-brain"></i></span><h3>Tu cerebro sigue madurando</h3><p>Hasta cerca de los 25 años sigue en desarrollo, y eso pesa en la atención y el aprendizaje.</p><span class="chipbtn static"><i class="ph-bold ph-file-text"></i>CDC, NIDA</span></article>
+      <article class="card wc w-teal"><span class="bc-ic"><i class="ph-bold ph-graduation-cap"></i></span><h3>También se juega tu rendimiento</h3><p>Sueño, memoria y concentración dependen del cuerpo. Una mala noche se paga en el examen.</p></article>
+      <article class="card wc w-yellow"><span class="bc-ic"><i class="ph-bold ph-users-three"></i></span><h3>Cuidar a otros también es cosa tuya</h3><p>Muchas veces eres quien está cuando alguien se ve mal. Saber qué hacer y cuándo llamar al 911 marca la diferencia.</p></article>
     </section>
 
-    <h2 class="sec-h">Para qué sirve</h2>
+    <h2 class="sec-h">El objetivo</h2>
     <section class="goal card" aria-label="Objetivo">
-      <div class="goal-main"><span class="kicker light"><i class="ph-bold ph-target"></i>Objetivo</span><h3>Que sepas qué hacer antes de que pase.</h3>
-        <p>Que puedas notar cuándo algo va mal, pensar en las consecuencias de cada opción y saber a quién pedir ayuda.</p></div>
+      <div class="goal-main"><span class="kicker light"><i class="ph-bold ph-target"></i>Objetivo</span><h3>Que decidas con información, antes de la noche difícil.</h3>
+        <p>No buscamos que nadie sea perfecto. Buscamos que sepas lo que pasa, reconozcas las señales y pidas ayuda a tiempo.</p></div>
       <div class="goal-list">
-        <div class="gl"><i class="ph-bold ph-eye"></i><div><b>Notar cuando algo va mal</b><span>Qué señales indican que no es normal.</span></div></div>
-        <div class="gl"><i class="ph-bold ph-scales"></i><div><b>Pensar en las consecuencias</b><span>Ver qué pasa con cada opción antes de elegir.</span></div></div>
-        <div class="gl"><i class="ph-bold ph-hand-heart"></i><div><b>Saber a quién llamar</b><span>Tener a mano el 911 y el IAFA.</span></div></div>
+        <div class="gl"><i class="ph-bold ph-eye"></i><div><b>Reconocer señales</b><span>Saber cuándo algo no es normal.</span></div></div>
+        <div class="gl"><i class="ph-bold ph-scales"></i><div><b>Elegir con cuidado</b><span>Ver las consecuencias antes de decidir.</span></div></div>
+        <div class="gl"><i class="ph-bold ph-hand-heart"></i><div><b>Pedir ayuda a tiempo</b><span>Tener claro a quién llamar.</span></div></div>
       </div>
     </section>
 
-    <h2 class="sec-h">Qué incluye y qué no</h2>
-    <section class="isnt" aria-label="Qué incluye y qué no">
-      <article class="card ic-card is"><h3><i class="ph-bold ph-check-circle"></i>Incluye</h3>
-        <ul><li>Historias inventadas, basadas en situaciones reales.</li><li>Datos con su fuente.</li><li>Opciones con consecuencias distintas.</li></ul></article>
-      <article class="card ic-card not"><h3><i class="ph-bold ph-x-circle"></i>No incluye</h3>
-        <ul><li>Diagnósticos ni tratamientos.</li><li>Consejos médicos personales: para eso están los profesionales de salud.</li><li>Puntos por consumir. Solo suman las decisiones de cuidado.</li></ul></article>
-      <p class="honest"><i class="ph-bold ph-info"></i>El contenido sigue en revisión. Las fuentes están indicadas, pero falta confirmarlas en el documento original.</p>
+    <h2 class="sec-h">Qué es y qué no es</h2>
+    <section class="isnt" aria-label="Qué es y qué no es">
+      <article class="card ic-card is"><h3><i class="ph-bold ph-check-circle"></i>Esto es</h3>
+        <ul><li>Educación para decidir mejor.</li><li>Historias inventadas, basadas en situaciones reales.</li><li>Información con referencia, en contexto y efecto.</li></ul></article>
+      <article class="card ic-card not"><h3><i class="ph-bold ph-x-circle"></i>Esto no es</h3>
+        <ul><li>Un diagnóstico ni un tratamiento.</li><li>Un reemplazo de profesionales de salud.</li><li>Una invitación a consumir: consumir nunca da puntos.</li></ul></article>
+      <p class="honest"><i class="ph-bold ph-info"></i>El contenido está en revisión: las referencias están atribuidas pero pendientes de verificar en su fuente original.</p>
     </section>
 
     <section class="cta-row" aria-label="Ayuda y empezar">
-      <article class="card help-card"><span class="bc-ic"><i class="ph-bold ph-lifebuoy"></i></span><div><h3>Si necesitas ayuda ahora</h3><p class="big">IAFA 800-IAFA-800</p><p>Emergencias: <b>911</b>. Si alguien no despierta o respira muy lento, llama sin esperar.</p></div><a class="btn btn-ghost btn-sm" href="#/guia/mezclas"><i class="ph-bold ph-book-open-text"></i>Ver qué hacer</a></article>
-      <article class="card start-card"><h3>Elige un caso</h3><p>Son historias cortas. Entra por la que quieras.</p><a class="btn btn-go" href="#/casos">Ver los casos<i class="ph-bold ph-arrow-right"></i></a></article>
+      <article class="card help-card"><span class="bc-ic"><i class="ph-bold ph-lifebuoy"></i></span><div><h3>Si necesitas ayuda ahora</h3><p class="big">IAFA 800-IAFA-800</p><p>Emergencias: <b>911</b>. Si alguien no despierta o respira lento, llama sin esperar.</p></div><a class="btn btn-ghost btn-sm" href="#/guia/mezclas"><i class="ph-bold ph-book-open-text"></i>Qué hacer</a></article>
+      <article class="card start-card"><h3>Empieza por un caso</h3><p>Son historias cortas. Puedes entrar por el que más te suene.</p><a class="btn btn-go" href="#/casos">Ver los casos<i class="ph-bold ph-arrow-right"></i></a></article>
     </section>`;
   }
-
   function wireHome() {
     document.querySelectorAll("[data-av]").forEach((b) => b.addEventListener("click", () => {
       S.av = Number(b.dataset.av);
       document.querySelectorAll("[data-av]").forEach((x) => x.setAttribute("aria-checked", String(x === b)));
       document.getElementById("hero-port").innerHTML = portrait(userSpec(), "happy");
     }));
-    const go = () => { S.name = document.getElementById("nm").value.trim(); save(); location.hash = "#/casos"; };
-    document.getElementById("start").addEventListener("submit", (e) => { e.preventDefault(); go(); });
-    // Botón flotante: aparece cuando ningún botón principal está a la vista.
-    const fab = document.createElement("button"); fab.id = "fab"; fab.type = "button"; fab.hidden = true; fab.className = "btn btn-go fab";
-    fab.innerHTML = '<i class="ph-bold ph-play"></i>Jugar'; fab.setAttribute("aria-label", "Jugar: ir a los casos");
-    fab.addEventListener("click", go); document.body.appendChild(fab);
-    // Se oculta si un botón principal está a la vista o si ya se ve el bloque final (no tapa el contenido de abajo).
-    const vis = new Set(), upd = () => { fab.hidden = vis.size > 0; };
-    const watch = (el, th) => { const o = new IntersectionObserver((es) => { es.forEach((e) => (e.isIntersecting ? vis.add(e.target) : vis.delete(e.target))); upd(); }, { threshold: th }); o.observe(el); return o; };
-    const btn1 = document.querySelector("#start .btn"), cta = document.querySelector(".cta-row");
-    fabObs = { list: [btn1 && watch(btn1, 0.6), cta && watch(cta, 0.01)].filter(Boolean), disconnect() { this.list.forEach((o) => o.disconnect()); } };
+    document.getElementById("start").addEventListener("submit", (e) => { e.preventDefault(); S.name = document.getElementById("nm").value.trim(); save(); location.hash = "#/casos"; });
   }
-  let fabObs = null;
-  function clearFab() { if (fabObs) { fabObs.disconnect(); fabObs = null; } const f = document.getElementById("fab"); if (f) f.remove(); }
 
   function endsDots(c) {
     const found = (S.prog[c.id] || {}).ends || {};
@@ -282,7 +268,7 @@
   function casesView(filter) {
     const list = CASES.filter((c) => filter === "todos" || c.tag === filter);
     const chips = [["todos", "Todos"], ...Object.entries(TAGS)].map(([k, v]) => `<button class="chip" type="button" data-f="${k}" aria-pressed="${k === filter}">${v}</button>`).join("");
-    return `<div class="page-head"><h1>${S.name ? esc(S.name) + ", elige" : "Elige"} un caso</h1><p>Cada uno es una historia distinta. Los puntos de abajo son los finales que ya viste.</p></div>
+    return `<div class="page-head"><h1>${S.name ? esc(S.name) + ", elige" : "Elige"} un caso</h1><p>Cada uno es una historia distinta. Entra a donde quieras. Los puntos de abajo son los finales que ya viste.</p></div>
       <div class="chips" role="group" aria-label="Filtrar por tema">${chips}</div>
       <div class="grid">${list.map((c) => `<article class="case cc-${c.color}">
         <div class="case-top"><span class="big"><i class="ph-bold ${c.icon}"></i></span><span class="tagpill">${TAGS[c.tag]}</span></div>
@@ -301,17 +287,17 @@
             <h1>${esc(c.title)}</h1>
             <p class="story">${esc(fill(c.story))}</p>
             <div class="cast" aria-label="Personajes">${c.cast.map((p) => `<div class="cast-row">${avatar(NPCS[p[0]], "happy")}<div><strong>${esc(p[0])}</strong> <span>${esc(p[1])}</span></div></div>`).join("")}</div>
-            <div class="end-actions"><a class="btn btn-go" href="#/jugar/${c.id}">Jugar desde el principio<i class="ph-bold ph-play"></i></a><a class="btn btn-ghost" href="#/guia/${c.guide}"><i class="ph-bold ph-book-open-text"></i>Ver la guía</a></div>
+            <div class="end-actions"><a class="btn btn-go" href="#/jugar/${c.id}">Jugar desde el principio<i class="ph-bold ph-play"></i></a><a class="btn btn-ghost" href="#/guia/${c.guide}"><i class="ph-bold ph-book-open-text"></i>Qué pasa de verdad</a></div>
           </div>
         </article>
-        <aside class="card side"><h2>Entrar a una escena</h2><p style="color:var(--ink-2);font-size:.95rem">Entra directo a un momento del caso.</p>
+        <aside class="card side"><h2>Entrar a una escena</h2><p style="color:var(--ink-2);font-size:.95rem">Salta directo a un momento clave del caso.</p>
           ${c.scenes.map((s, i) => `<a class="scene-btn" href="#/jugar/${c.id}/${s[1]}"><span><span class="n">${i + 1}</span>${esc(s[0])}</span><i class="ph-bold ph-arrow-right"></i></a>`).join("")}
           <p class="ends" style="margin-top:6px">Finales: ${endsDots(c)}</p></aside>
       </div>`;
   }
 
   function guideList() {
-    return `<div class="page-head"><h1>Guía por tema</h1><p>Qué se siente, qué le pasa al cuerpo, qué se cree sin ser cierto, cuándo es urgente y qué ayuda.</p></div>
+    return `<div class="page-head"><h1>Lo que de verdad pasa</h1><p>Sin rodeos: qué sientes, qué le pasa a tu cuerpo, qué es mito, cuándo es urgente y qué ayuda.</p></div>
       <div class="sheets">${GUIDES.map((g) => `<a class="card sheet-card" href="#/guia/${g.id}"><span class="big"><i class="ph-bold ${g.icon}"></i></span><div><h2>${esc(g.title)}</h2><p>${esc(g.src)}</p></div></a>`).join("")}</div>`;
   }
   function guideSheet(g) {
@@ -499,7 +485,7 @@
     if (e.k === "good") sndGood(); else if (e.k === "bad") sndBad();
     return `<article class="card end"><div class="end-head ${e.k}"><span class="end-badge"><i class="ph-bold ${label[0]}"></i>${label[1]}</span><h2>${esc(e.h)}</h2></div>
       <div class="end-body">
-        <div><h3><i class="ph-bold ph-flask"></i>Qué pasó</h3>${e.real.map((r) => `<p>${esc(r)}</p>`).join("")}</div>
+        <div><h3><i class="ph-bold ph-flask"></i>Lo que de verdad pasó</h3>${e.real.map((r) => `<p>${esc(r)}</p>`).join("")}</div>
         <div class="tip"><h3><i class="ph-bold ph-lightbulb"></i>La próxima vez</h3><p>${esc(e.tip)}</p></div>
         <div class="sumrow"><span class="sumpill"><i class="ph-fill ph-heart" style="color:var(--coral)"></i>${G.care} puntos de cuidado</span><span class="sumpill"><i class="ph-bold ph-flag-checkered"></i>${found} de ${total} finales</span></div>
         <div class="end-actions">
@@ -530,7 +516,7 @@
   function route() {
     const parts = (location.hash || "#/").replace(/^#\/?/, "").split("/").filter(Boolean);
     let html = "", after = null;
-    closePeek(); $toasts.innerHTML = ""; clearFab();
+    closePeek(); $toasts.innerHTML = "";
     const cur = ["casos", "caso", "jugar"].includes(parts[0]) ? "casos" : parts[0] === "guia" ? "guia" : "";
     document.querySelectorAll("[data-nav]").forEach((a) => (a.dataset.nav === cur ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current")));
     if (G && parts[0] !== "jugar") { G.token++; G = null; }

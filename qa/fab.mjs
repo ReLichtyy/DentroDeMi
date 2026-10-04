@@ -1,0 +1,17 @@
+import { chromium } from "playwright";
+const b = await chromium.launch();
+const ctx = await b.newContext({ viewport: { width: 1280, height: 800 } });
+await ctx.addInitScript(() => localStorage.setItem("dm2-reduce", "true"));
+const p = await ctx.newPage(); const errs = []; p.on("pageerror", (e) => errs.push(e.message));
+await p.goto("http://127.0.0.1:5180/#/"); await p.waitForTimeout(600);
+const st = async (l) => console.log(l, "fab visible:", await p.$eval("#fab", (e) => !e.hidden));
+await st("arriba      ");
+await p.evaluate(() => window.scrollTo(0, 1500)); await p.waitForTimeout(400); await st("a la mitad  ");
+await p.screenshot({ path: "shots/fab-mid.png" });
+await p.evaluate(() => window.scrollTo(0, document.body.scrollHeight)); await p.waitForTimeout(400); await st("al final     ");
+await p.evaluate(() => window.scrollTo(0, 1500)); await p.waitForTimeout(300);
+await p.click("#fab"); await p.waitForSelector(".grid"); console.log("tras clic:", await p.evaluate(() => location.hash), "fab existe:", !!(await p.$("#fab")));
+await p.goto("http://127.0.0.1:5180/#/"); await p.waitForTimeout(500);
+await p.evaluate(() => document.querySelector(".bento").scrollIntoView({ block: "start" })); await p.waitForTimeout(300);
+await p.screenshot({ path: "shots/home-bento.png" });
+console.log("errores:", errs.length ? errs : "ninguno"); await b.close();

@@ -37,3 +37,34 @@ Original prompt v2: hacer la página más sencilla e interactiva, que se sienta 
 - Entrada directa: `#/caso/ID`, `#/jugar/ID` y `#/jugar/ID/ESCENA`. Guía por sustancia: `#/guia/ID`.
 - QA: `cd qa && node run.mjs` recorre todos los caminos por la UI.
 - Pendiente: ilustraciones propias, revisión profesional del contenido (las fuentes no se verificaron en origen), probar en táctil y lector de pantalla.
+
+---
+# v3: contexto y efecto, personaje a la derecha
+
+- Fondo propio: líneas de señal con latido + brillo de color por caso (sin puntos ni cuadrícula).
+- Datos en dos partes (Contexto y Efecto) con "Saber más" opcional. Fuente tocable (hoja con quién es y aviso de que está sin verificar).
+- Pantalla de juego: tú a la izquierda (cuerpo en vivo), personaje de la historia a la derecha (retrato con 12 expresiones, fondo de escena por caso). En "Alguien no responde" las barras son de Sofi.
+- Objetos de la escena tocables (+2 cuidado la primera vez) y barras del cuerpo tocables (qué significa según el nivel).
+- Entrar directo a una escena aplica el cambio de cuerpo que corresponde (`jump` en data.js).
+- Servidor: `python -m http.server 5180 --bind 127.0.0.1` (el 5173 lo ocupa otra app). QA: `cd qa && node run.mjs`.
+- Pendiente: verificar fuentes en origen, ilustración final, probar táctil/lector de pantalla, versión móvil con HUD más compacto.
+
+---
+# v4: fondo de lienzo con figuras, mochila y referencia
+
+- Fondo: puntos (lienzo) + figuras variadas tipo papel tapiz de chat, con los íconos de la historia (corazón, píldora, llaves, luna, etc.). Se genera en `paintDoodle()` y toma el color del caso.
+- Mochila ("Tus objetos") en la tarjeta del usuario: los objetos se suman a medida que aparecen en las etapas (marca NUEVO). 23 objetos. El rebobinado restaura la mochila.
+- Contexto = referencia (organización con nombre completo) + resumen. La referencia se toca para ver quién es. Sin enlaces: las fuentes siguen sin verificar.
+- Nota: un parche borró reglas base de styles.css (main, h1, a, hidden); ya restauradas. Copias en `qa/*.v3.bak`.
+
+---
+# v5: portada con secciones en cards
+
+Bajo "Cómo se juega": Qué es Dentro de Mí (bento), Por qué importa como estudiante, El objetivo, Qué es y qué no es, ayuda y llamado a jugar. Sin cifras sin verificar (solo 5 casos y 21 finales, calculados de los datos).
+
+---
+# v6: textos menos de plantilla, card nueva y boton flotante
+
+- Reescritos titulos de finales, hooks y textos de portada (sin aforismos ni estructuras "no X, sino Y"). Nav "Guia".
+- Card "Una mochila que se llena" reemplaza a "Sin sermones".
+- Boton flotante Jugar en portada (IntersectionObserver sobre los botones principales).

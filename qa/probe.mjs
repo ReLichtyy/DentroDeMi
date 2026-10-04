@@ -1,6 +1,7 @@
 import { chromium } from "playwright";
-const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1000, height: 700 } });
-await p.goto("http://localhost:5173/#/jugar/sofi"); await p.waitForTimeout(800);
-await p.screenshot({ path: "shots/probe.png" });
-console.log(await p.evaluate(() => getComputedStyle(document.querySelector(".hud .char .body")).fill));
+const b = await chromium.launch(); const p = await b.newPage();
+await p.addInitScript(() => { localStorage.setItem("dm2-reduce", "true"); });
+p.on("console", (m) => console.log("console:", m.type(), m.text())); p.on("pageerror", (e) => console.log("pageerror:", e.message));
+await p.goto("http://127.0.0.1:5180/#/jugar/llaves/n3"); await p.waitForTimeout(1500);
+console.log((await p.evaluate(() => document.getElementById("app").innerText)).slice(0, 400));
 await b.close();

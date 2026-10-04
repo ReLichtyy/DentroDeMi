@@ -439,14 +439,3 @@ body:not(.reduce) .cast-av .port { animation: none; }
 .choices-mini b { display: grid; place-items: center; width: 28px; height: 28px; border: 2px solid var(--edge); border-radius: 9px; background: var(--card-2); font-family: "Fredoka", sans-serif; }
 .mood-strip { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; }
 .mood-strip span { display: grid; justify-items: center; gap: 4px; } .mood-strip .cast-av { --s: 58px; } .mood-strip small { font-size: .78rem; color: var(--ink-2); font-weight: 600; }
-
-/* Botón flotante Jugar (portada): centrado, grande, con flote suave. */
-.fab { position: fixed; z-index: 36; left: 50%; bottom: 68px; min-height: 68px; padding: 0 44px; font-size: 1.45rem; gap: 12px; transform: translateX(-50%); animation: fabin .45s var(--ease) both, fabfloat 3.4s ease-in-out .45s infinite; }
-.fab i { font-size: 1.6rem; }
-.fab::after { content: ""; position: absolute; inset: -7px; border: 3px solid var(--pri); border-radius: 22px; opacity: 0; pointer-events: none; animation: fabring 3.4s ease-out .45s infinite; }
-@keyframes fabin { from { opacity: 0; transform: translate(-50%, 18px) scale(.94); } to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
-@keyframes fabfloat { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, -6px); } }
-@keyframes fabring { 0% { opacity: .55; transform: scale(.97); } 70%, 100% { opacity: 0; transform: scale(1.08); } }
-.fab:hover { transform: translate(-50%, -3px); } .fab:active { transform: translate(-50%, 2px); }
-@media (max-width: 520px) { .fab { min-height: 62px; padding: 0 34px; font-size: 1.3rem; } }
-.bag-demo { margin-top: 6px; } .bag-demo .obj { pointer-events: none; }

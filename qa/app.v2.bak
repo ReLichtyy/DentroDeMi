@@ -1,0 +1,326 @@
+// Dentro de Mí v2: juego de historias. SPA con rutas por hash, sin dependencias.
+(function () {
+  const $app = document.getElementById("app");
+  const $toasts = document.getElementById("toasts");
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* sin almacenamiento */ } },
+  };
+  const S = {
+    name: store.get("dm2-name", ""),
+    av: store.get("dm2-av", 0),
+    prog: store.get("dm2-prog", {}),       // { caseId: { ends: {nodeId: kind}, best: n } }
+    reduce: store.get("dm2-reduce", false),
+    snd: store.get("dm2-snd", 0),
+  };
+  const save = () => { store.set("dm2-name", S.name); store.set("dm2-av", S.av); store.set("dm2-prog", S.prog); };
+  const me = () => S.name || "tú";
+  const fill = (s) => s.replace(/\{yo\}/g, me());
+  const caseOf = (id) => CASES.find((c) => c.id === id);
+
+  /* ---------- ajustes: movimiento y sonido ---------- */
+  document.body.classList.toggle("reduce", S.reduce);
+  const mt = document.getElementById("motion-toggle");
+  mt.setAttribute("aria-pressed", String(S.reduce));
+  mt.addEventListener("click", () => { S.reduce = !S.reduce; store.set("dm2-reduce", S.reduce); document.body.classList.toggle("reduce", S.reduce); mt.setAttribute("aria-pressed", String(S.reduce)); });
+  const SND = [["Sonido: no", 0], ["Sonido: bajo", 0.04], ["Sonido: medio", 0.09]];
+  const sb = document.getElementById("sound-toggle");
+  const paintSnd = () => { sb.querySelector("span").textContent = SND[S.snd][0]; sb.setAttribute("aria-pressed", String(S.snd > 0)); };
+  let actx = null;
+  function tone(freqs, type) {
+    const vol = SND[S.snd][1];
+    if (!vol || !(window.AudioContext || window.webkitAudioContext)) return;
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      freqs.forEach((f, i) => {
+        const o = actx.createOscillator(), g = actx.createGain(), t = actx.currentTime + i * 0.12;
+        o.type = type || "sine"; o.frequency.value = f;
+        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+        o.connect(g).connect(actx.destination); o.start(t); o.stop(t + 0.5);
+      });
+    } catch (e) { /* sin audio */ }
+  }
+  const sndGood = () => tone([523.25, 659.25, 783.99]);
+  const sndBad = () => tone([196, 146.83], "triangle");
+  sb.addEventListener("click", () => { S.snd = (S.snd + 1) % 3; store.set("dm2-snd", S.snd); paintSnd(); sndGood(); });
+  paintSnd();
+
+  function toast(msg) {
+    while ($toasts.children.length > 2) $toasts.firstChild.remove();
+    const el = document.createElement("div"); el.className = "toast"; el.textContent = msg; $toasts.appendChild(el);
+    setTimeout(() => el.remove(), 2300);
+  }
+
+  /* ---------- personaje ---------- */
+  function character(mood, preset, cls) {
+    const p = PRESETS[preset] || PRESETS[0];
+    const mouths = { calm: "M72 112 Q90 126 108 112", tired: "M74 118 Q90 114 106 118", confused: "M74 116 Q82 108 90 116 T106 116", alert: "M76 124 Q90 106 104 124" };
+    const brows = mood === "alert" || mood === "confused" ? '<path class="mouth" style="stroke-width:3" d="M62 72 L80 64 M118 72 L100 64"/>'
+      : mood === "tired" ? '<path class="mouth" style="stroke-width:3" d="M64 68 L80 73 M116 68 L100 73"/>' : "";
+    const eyeH = mood === "tired" ? 3.5 : mood === "alert" ? 10 : 8;
+    return `<svg class="char ${mood === "alert" ? "alert " : ""}${cls || ""}" viewBox="0 0 180 220" role="img" aria-label="Personaje: ${mood === "calm" ? "tranquilo" : mood === "tired" ? "cansado" : mood === "confused" ? "confundido" : "necesita ayuda"}" style="--skin:${p.skin};--hairc:${p.hair};--shirt:${p.body}">
+      <rect class="body outline" x="38" y="150" width="104" height="70" rx="38"/>
+      <circle class="skin outline" cx="90" cy="92" r="52"/>
+      <path class="hair" d="M40 86 C38 40 142 38 140 86 C128 62 100 56 90 58 C76 58 52 64 40 86Z"/>
+      <ellipse class="ink" cx="70" cy="90" rx="6" ry="${eyeH}"/><ellipse class="ink" cx="110" cy="90" rx="6" ry="${eyeH}"/>
+      ${brows}<circle class="cheek" cx="56" cy="108" r="8"/><circle class="cheek" cx="124" cy="108" r="8"/>
+      <path class="mouth" d="${mouths[mood]}"/></svg>`;
+  }
+  function moodOf(stats, keys) {
+    const avg = keys.reduce((a, k) => a + stats[k], 0) / keys.length;
+    const min = Math.min(...keys.map((k) => stats[k]));
+    if (min <= 0 || avg < 1.5) return ["alert", "Necesita ayuda"];
+    if (avg < 2.6) return ["confused", "Muy alterado"];
+    if (avg < 3.6) return ["tired", "Algo cambió"];
+    return ["calm", "Todo bien por ahora"];
+  }
+
+  /* ---------- vistas ---------- */
+  function home() {
+    return `<section class="home">
+      <div>
+        <span class="kicker"><i class="ph-bold ph-game-controller"></i>Juego de decisiones reales</span>
+        <h1>Dentro<br>de <em>Mí</em></h1>
+        <p class="lead">Una noche. Una decisión. Tu cuerpo responde. Sin sermones: aquí se cuenta lo que de verdad pasa.</p>
+        <form class="start-form" id="start">
+          <div class="field"><label for="nm">¿Cómo te llamas?</label><input id="nm" name="nm" maxlength="14" autocomplete="off" placeholder="Tu nombre o apodo" value="${esc(S.name)}"></div>
+          <div class="field"><span class="lbl" id="avl">Elige tu personaje</span>
+            <div class="avs" role="radiogroup" aria-labelledby="avl">${PRESETS.map((p, i) => `<button type="button" class="av" role="radio" aria-checked="${i === S.av}" aria-label="Personaje ${i + 1}" data-av="${i}">${character("calm", i, "")}</button>`).join("")}</div></div>
+          <div><button class="btn btn-go" type="submit">Jugar<i class="ph-bold ph-arrow-right"></i></button></div>
+        </form>
+      </div>
+      <div class="home-art" aria-hidden="true">
+        ${character("calm", S.av)}
+        <span class="float f1"><i class="ph-bold ph-lightning"></i>Reflejos</span>
+        <span class="float f2"><i class="ph-bold ph-heartbeat"></i>Corazón</span>
+        <span class="float f3"><i class="ph-bold ph-book-open-text"></i>Memoria</span>
+      </div>
+    </section>
+    <section class="steps">
+      <div class="card step"><i class="ph-bold ph-signpost"></i><h3>Elige qué haces</h3><p>Cada caso es una historia corta. Tus decisiones cambian cómo termina.</p></div>
+      <div class="card step"><i class="ph-bold ph-heartbeat"></i><h3>Mira tu cuerpo</h3><p>Reflejos, memoria, corazón y más suben o bajan en vivo según lo que decides.</p></div>
+      <div class="card step"><i class="ph-bold ph-flask"></i><h3>Entérate de lo real</h3><p>Datos directos de qué pasa de verdad, con fuente, sin rodeos ni miedo barato.</p></div>
+    </section>`;
+  }
+  function wireHome() {
+    document.querySelectorAll("[data-av]").forEach((b) => b.addEventListener("click", () => {
+      S.av = Number(b.dataset.av);
+      document.querySelectorAll("[data-av]").forEach((x) => x.setAttribute("aria-checked", String(x === b)));
+      document.querySelector(".home-art .char").outerHTML = character("calm", S.av);
+    }));
+    document.getElementById("start").addEventListener("submit", (e) => {
+      e.preventDefault(); S.name = document.getElementById("nm").value.trim(); save(); location.hash = "#/casos";
+    });
+  }
+
+  function endsDots(c) {
+    const total = Object.values(c.nodes).filter((n) => n.end);
+    const found = (S.prog[c.id] || {}).ends || {};
+    return total.map((n, i) => { const id = Object.keys(c.nodes).find((k) => c.nodes[k] === n); return `<span class="dot ${found[id] ? "on " + found[id] : ""}"></span>`; }).join("");
+  }
+  function casesView(filter) {
+    const list = CASES.filter((c) => filter === "todos" || c.tag === filter);
+    const chips = [["todos", "Todos"], ...Object.entries(TAGS)].map(([k, v]) => `<button class="chip" type="button" data-f="${k}" aria-pressed="${k === filter}">${v}</button>`).join("");
+    return `<div class="page-head"><h1>${S.name ? esc(S.name) + ", elige" : "Elige"} un caso</h1><p>Cada uno es una historia distinta. Entra a donde quieras. Los puntos de abajo son los finales que ya viste.</p></div>
+      <div class="chips" role="group" aria-label="Filtrar por tema">${chips}</div>
+      <div class="grid">${list.map((c) => `<article class="case cc-${c.color}">
+        <div class="case-top"><span class="big"><i class="ph-bold ${c.icon}"></i></span><span class="tagpill">${TAGS[c.tag]}</span></div>
+        <div class="case-body"><h2>${esc(c.title)}</h2><p>${esc(c.hook)}</p>
+          <div class="case-foot"><span class="ends" title="Finales descubiertos">${endsDots(c)}</span>
+            <span class="case-btns"><a class="btn btn-ghost btn-sm" href="#/caso/${c.id}">Detalles</a><a class="btn btn-go btn-sm" href="#/jugar/${c.id}">Jugar<i class="ph-bold ph-play"></i></a></span></div></div></article>`).join("")}</div>`;
+  }
+  function wireCases() {
+    document.querySelectorAll("[data-f]").forEach((b) => b.addEventListener("click", () => { $app.innerHTML = casesView(b.dataset.f); wireCases(); }));
+  }
+
+  function introView(c) {
+    return `<nav class="crumbs"><a href="#/casos"><i class="ph-bold ph-arrow-left"></i>Casos</a><span aria-hidden="true">/</span><span>${esc(c.title)}</span></nav>
+      <div class="intro">
+        <article class="card intro-main cc-${c.color}">
+          <div class="case-top"><span class="big"><i class="ph-bold ${c.icon}"></i></span><span class="tagpill">${TAGS[c.tag]}</span></div>
+          <div class="body" style="background:var(--card)">
+            <h1>${esc(c.title)}</h1>
+            <p class="story">${esc(fill(c.story))}</p>
+            <div class="cast" aria-label="Personajes">${c.cast.map((p) => `<div class="cast-row"><span class="cast-ini">${p[0][0]}</span><div><strong>${esc(p[0])}</strong> <span>${esc(p[1])}</span></div></div>`).join("")}</div>
+            <div class="end-actions"><a class="btn btn-go" href="#/jugar/${c.id}">Jugar desde el principio<i class="ph-bold ph-play"></i></a><a class="btn btn-ghost" href="#/guia/${c.guide}"><i class="ph-bold ph-book-open-text"></i>Qué pasa de verdad</a></div>
+          </div>
+        </article>
+        <aside class="card side"><h2>Entrar a una escena</h2><p style="color:var(--ink-2);font-size:.95rem">Salta directo a un momento clave del caso.</p>
+          ${c.scenes.map((s, i) => `<a class="scene-btn" href="#/jugar/${c.id}/${s[1]}"><span><span class="n">${i + 1}</span>${esc(s[0])}</span><i class="ph-bold ph-arrow-right"></i></a>`).join("")}
+          <p class="ends" style="margin-top:6px">Finales: ${endsDots(c)}</p></aside>
+      </div>`;
+  }
+
+  function guideList() {
+    return `<div class="page-head"><h1>Lo que de verdad pasa</h1><p>Sin rodeos: qué sientes, qué le pasa a tu cuerpo, qué es mito, cuándo es urgente y qué ayuda.</p></div>
+      <div class="sheets">${GUIDES.map((g) => `<a class="card sheet-card" href="#/guia/${g.id}"><span class="big"><i class="ph-bold ${g.icon}"></i></span><div><h2>${esc(g.title)}</h2><p>${esc(g.src)}</p></div></a>`).join("")}</div>`;
+  }
+  function guideSheet(g) {
+    const rel = CASES.filter((c) => c.guide === g.id);
+    return `<nav class="crumbs"><a href="#/guia"><i class="ph-bold ph-arrow-left"></i>Guía</a><span aria-hidden="true">/</span><span>${esc(g.title)}</span></nav>
+      <article class="card sheet">
+        <div class="sheet-head"><span class="big"><i class="ph-bold ${g.icon}"></i></span><div><h1>${esc(g.title)}</h1><p>Fuentes: ${esc(g.src)}</p></div></div>
+        ${g.sections.map((s, i) => `<details class="sec ${s.h === "Es urgente si" ? "urgent" : ""}" open><summary>${esc(s.h)}<i class="ph-bold ph-caret-down"></i></summary><div class="in">${
+          s.items ? s.items.map((m) => `<div class="myth"><div class="m"><i class="ph-bold ph-x-circle"></i>${esc(m[0])}</div><div class="r"><i class="ph-bold ph-check-circle"></i>${esc(m[1])}</div></div>`).join("") : `<p>${esc(s.t)}</p>`}</div></details>`).join("")}
+      </article>
+      ${rel.length ? `<div class="end-actions" style="margin-top:20px">${rel.map((c) => `<a class="btn btn-go" href="#/jugar/${c.id}"><i class="ph-bold ph-play"></i>Jugar: ${esc(c.title)}</a>`).join("")}</div>` : ""}`;
+  }
+
+  /* ---------- motor de juego ---------- */
+  let G = null;
+  const clamp = (v) => Math.max(0, Math.min(4, v));
+
+  function tileHTML(k, v) {
+    const st = STAT[k];
+    return `<div class="tile v${v}" data-k="${k}"><i class="ph-bold ${st.i} ic" aria-hidden="true"></i><span class="nm">${st.n}</span>
+      <div class="cells" role="img" aria-label="${st.n}: ${st.l[v]}">${[1, 2, 3, 4].map((n) => `<span class="${n <= v ? "on" : ""}"></span>`).join("")}</div><span class="lab">${st.l[v]}</span></div>`;
+  }
+  function startPlay(c, nodeId) {
+    document.body.dataset.wash = c.color;
+    G = { c, stats: Object.fromEntries(Object.keys(STAT).map((k) => [k, 4])), care: 0, hist: [], node: null, token: 0, echo: "", seen: {} };
+    $app.innerHTML = `<div class="play">
+      <div class="play-bar"><div><a class="crumbs" style="margin:0" href="#/caso/${c.id}"><i class="ph-bold ph-arrow-left"></i>${esc(c.title)}</a></div>
+        <span class="score" id="score" title="Puntos por decidir con cuidado"><i class="ph-fill ph-heart"></i><span id="care">0</span> cuidado</span></div>
+      <aside class="card hud" aria-label="Tu cuerpo"><div class="hud-top"><div id="face"></div><div><div class="who">${esc(me())}</div><div class="mood" id="mood"></div></div></div>
+        <div class="tiles" id="tiles">${c.stats.map((k) => tileHTML(k, 4)).join("")}</div></aside>
+      <section class="stage" id="stage" aria-live="polite"></section></div>`;
+    paintFace();
+    enter(nodeId);
+  }
+  function paintFace() {
+    const [m, lab] = moodOf(G.stats, G.c.stats);
+    document.getElementById("face").innerHTML = character(m, S.av);
+    document.getElementById("mood").textContent = lab;
+  }
+  function applyDelta(d) {
+    Object.entries(d || {}).forEach(([k, dv]) => {
+      if (!G.c.stats.includes(k)) return;
+      const old = G.stats[k], nv = clamp(old + dv);
+      if (nv === old) return;
+      G.stats[k] = nv;
+      const tile = document.querySelector(`.tile[data-k="${k}"]`);
+      if (!tile) return;
+      tile.outerHTML = tileHTML(k, nv);
+      const t2 = document.querySelector(`.tile[data-k="${k}"]`);
+      const dir = nv < old ? "dn" : "up";
+      t2.classList.add(dir);
+      const pop = document.createElement("span"); pop.className = "pop " + dir; pop.textContent = (nv > old ? "+" : "") + (nv - old); t2.appendChild(pop);
+      setTimeout(() => pop.remove(), 1500);
+    });
+    paintFace();
+  }
+
+  function enter(id, restore) {
+    G.node = id; const n = G.c.nodes[id]; const my = ++G.token;
+    const stage = document.getElementById("stage");
+    if (n.end) return showEnd(id, n);
+    stage.innerHTML = `${G.echo ? `<span class="echo"><i class="ph-bold ph-arrow-bend-down-right"></i>${esc(G.echo)}</span>` : ""}<div class="bubbles" id="bub"></div><div id="after"></div>`;
+    window.scrollTo({ top: 0, behavior: S.reduce ? "auto" : "smooth" });
+    if (!restore && n.d) setTimeout(() => G.token === my && (applyDelta(n.d), n.d && Object.values(n.d).some((v) => v < 0) ? sndBad() : 0), S.reduce ? 0 : 450);
+    const lines = n.t.map(fill), bub = document.getElementById("bub");
+    let i = 0, timer = null;
+    const addLine = () => {
+      const m = lines[i].match(/^([^:«]{1,16}):\s*«(.*)»$/);
+      const el = document.createElement("div");
+      if (m) { el.className = "say"; el.innerHTML = `<span class="cast-ini" aria-hidden="true">${esc(m[1][0])}</span><div class="bub"><b>${esc(m[1])}</b>${esc(m[2])}</div>`; }
+      else { el.className = "nar"; el.textContent = lines[i]; }
+      bub.appendChild(el); i++;
+    };
+    const finish = () => {
+      if (G.token !== my) return;
+      clearTimeout(timer); while (i < lines.length) addLine();
+      stage.removeEventListener("click", skip);
+      const after = document.getElementById("after");
+      let html = "";
+      if (n.fact) html += `<div class="fact"><span class="ic" aria-hidden="true"><i class="ph-bold ph-flask"></i></span><div><div class="tg">Lo que de verdad pasa</div><h3>${esc(n.fact.h)}</h3><p>${esc(n.fact.t)}</p><span class="src">Fuente: ${esc(n.fact.s)}</span></div></div>`;
+      if (n.c) html += `<div class="choices" role="group" aria-label="¿Qué haces?">${n.c.map((c, k) => `<button class="choice" type="button" style="--i:${k}" data-k="${k}"><span class="k">${k + 1}</span><span>${esc(fill(c.t))}</span></button>`).join("")}</div>`;
+      if (n.go) html += `<div class="nextbar"><button class="btn btn-go" id="go" type="button">Seguir<i class="ph-bold ph-arrow-right"></i></button></div>`;
+      after.innerHTML = html;
+      after.querySelectorAll(".choice").forEach((b) => b.addEventListener("click", () => choose(n, Number(b.dataset.k))));
+      const go = document.getElementById("go"); if (go) { go.addEventListener("click", () => { G.echo = ""; enter(n.go); }); go.focus({ preventScroll: true }); }
+      if (n.c || n.go) setTimeout(() => after.scrollIntoView({ behavior: S.reduce ? "auto" : "smooth", block: "nearest" }), 80);
+    };
+    const skip = () => finish();
+    const tick = () => {
+      if (G.token !== my) return;
+      addLine();
+      if (i < lines.length) timer = setTimeout(tick, 1300); else timer = setTimeout(finish, 500);
+    };
+    if (restore || S.reduce) { while (i < lines.length) addLine(); finish(); }
+    else { stage.addEventListener("click", skip); tick(); if (lines.length > 1) bub.insertAdjacentHTML("afterend", `<p class="skip-hint">Toca la pantalla para ir más rápido.</p>`); }
+  }
+
+  function choose(n, k) {
+    const c = n.c[k];
+    G.hist.push({ node: G.node, stats: { ...G.stats }, care: G.care, echo: G.echo });
+    G.echo = fill(c.t);
+    if (c.care) { G.care += c.care; document.getElementById("care").textContent = G.care; const sc = document.getElementById("score"); sc.classList.remove("bump"); void sc.offsetWidth; sc.classList.add("bump"); toast(`+${c.care} cuidado`); sndGood(); }
+    enter(c.to);
+  }
+
+  function showEnd(id, n) {
+    const c = G.c, e = n.end, stage = document.getElementById("stage");
+    const p = (S.prog[c.id] = S.prog[c.id] || { ends: {}, best: 0 });
+    p.ends[id] = e.k; p.best = Math.max(p.best, G.care); save();
+    const total = Object.values(c.nodes).filter((x) => x.end).length, found = Object.keys(p.ends).length;
+    const label = { good: ["ph-seal-check", "Buen final"], ok: ["ph-circle-half", "Final a medias"], bad: ["ph-warning", "Final difícil"] }[e.k];
+    const key = (n.t || []).map(fill);
+    stage.innerHTML = `${G.echo ? `<span class="echo"><i class="ph-bold ph-arrow-bend-down-right"></i>${esc(G.echo)}</span>` : ""}
+      <div class="bubbles">${key.map((l) => { const m = l.match(/^([^:«]{1,16}):\s*«(.*)»$/); return m ? `<div class="say"><span class="cast-ini">${esc(m[1][0])}</span><div class="bub"><b>${esc(m[1])}</b>${esc(m[2])}</div></div>` : `<div class="nar">${esc(l)}</div>`; }).join("")}</div>
+      ${n.fact ? `<div class="fact"><span class="ic"><i class="ph-bold ph-flask"></i></span><div><div class="tg">Lo que de verdad pasa</div><h3>${esc(n.fact.h)}</h3><p>${esc(n.fact.t)}</p><span class="src">Fuente: ${esc(n.fact.s)}</span></div></div>` : ""}
+      <article class="card end"><div class="end-head ${e.k}"><span class="end-badge"><i class="ph-bold ${label[0]}"></i>${label[1]}</span><h2>${esc(e.h)}</h2></div>
+        <div class="end-body">
+          <div><h3><i class="ph-bold ph-flask"></i>Lo que de verdad pasó</h3>${e.real.map((r) => `<p>${esc(r)}</p>`).join("")}</div>
+          <div class="tip"><h3><i class="ph-bold ph-lightbulb"></i>La próxima vez</h3><p>${esc(e.tip)}</p></div>
+          <div class="sumrow"><span class="sumpill"><i class="ph-fill ph-heart" style="color:var(--coral)"></i>${G.care} puntos de cuidado</span><span class="sumpill"><i class="ph-bold ph-flag-checkered"></i>${found} de ${total} finales</span></div>
+          <div class="end-actions">
+            ${G.hist.length ? `<button class="btn btn-pri" id="rew" type="button"><i class="ph-bold ph-arrow-counter-clockwise"></i>Cambiar mi última decisión</button>` : ""}
+            <button class="btn btn-ghost" id="again" type="button"><i class="ph-bold ph-repeat"></i>Jugar de nuevo</button>
+            <a class="btn btn-ghost" href="#/casos"><i class="ph-bold ph-squares-four"></i>Otros casos</a>
+            <a class="btn btn-ghost" href="#/guia/${c.guide}"><i class="ph-bold ph-book-open-text"></i>Leer la guía</a>
+          </div></div></article>`;
+    if (e.k === "good") sndGood(); else if (e.k === "bad") sndBad();
+    if (n.d) applyDelta(n.d);
+    window.scrollTo({ top: 0, behavior: S.reduce ? "auto" : "smooth" });
+    const rew = document.getElementById("rew");
+    if (rew) rew.addEventListener("click", () => {
+      const snap = G.hist.pop(); G.stats = snap.stats; G.care = snap.care; G.echo = snap.echo;
+      rebuildHud(); document.getElementById("care").textContent = G.care; enter(snap.node, true);
+    });
+    document.getElementById("again").addEventListener("click", () => startPlay(c, c.start));
+  }
+  function rebuildHud() {
+    document.getElementById("tiles").innerHTML = G.c.stats.map((k) => tileHTML(k, G.stats[k])).join("");
+    paintFace();
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (!G || !/^#\/jugar/.test(location.hash) || e.target.matches("input,textarea")) return;
+    const n = Number(e.key);
+    if (n >= 1 && n <= 9) { const b = document.querySelector(`.choice[data-k="${n - 1}"]`); if (b) b.click(); }
+    else if (e.key === "Enter" || e.key === " ") { const g = document.getElementById("go"); if (g && document.activeElement !== g) { e.preventDefault(); g.click(); } else if (document.getElementById("bub") && !document.getElementById("after").innerHTML) $app.querySelector(".stage").click(); }
+  });
+
+  /* ---------- router ---------- */
+  function route() {
+    const parts = (location.hash || "#/").replace(/^#\/?/, "").split("/").filter(Boolean);
+    let html = "", after = null;
+    const cur = parts[0] === "casos" || parts[0] === "caso" || parts[0] === "jugar" ? "casos" : parts[0] === "guia" ? "guia" : "";
+    document.querySelectorAll("[data-nav]").forEach((a) => (a.dataset.nav === cur ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current")));
+    G && parts[0] !== "jugar" && (G.token++, G = null);
+    if (parts[0] !== "jugar") { const w = parts[0] === "caso" && caseOf(parts[1]); w ? (document.body.dataset.wash = w.color) : delete document.body.dataset.wash; }
+    if (parts[0] === "casos") { html = casesView("todos"); after = wireCases; }
+    else if (parts[0] === "caso") { const c = caseOf(parts[1]); if (!c) return void (location.hash = "#/casos"); html = introView(c); }
+    else if (parts[0] === "guia") { const g = GUIDES.find((x) => x.id === parts[1]); html = g ? guideSheet(g) : guideList(); }
+    else if (parts[0] === "jugar") {
+      const c = caseOf(parts[1]); if (!c) return void (location.hash = "#/casos");
+      const node = c.nodes[parts[2]] ? parts[2] : c.start;
+      $app.focus({ preventScroll: true }); startPlay(c, node); return;
+    } else { html = home(); after = wireHome; }
+    $app.innerHTML = html; window.scrollTo(0, 0); $app.focus({ preventScroll: true });
+    if (after) after();
+  }
+  window.addEventListener("hashchange", route);
+  route();
+})();
